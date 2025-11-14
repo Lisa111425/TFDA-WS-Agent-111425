@@ -706,13 +706,14 @@ with col3:
         """, unsafe_allow_html=True) 
 st.markdown("---") 
 # ==================== TABS ====================
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
     t["upload_tab"], 
     t["preview_tab"], 
     t["config_tab"], 
     t["execute_tab"], 
     t["dashboard_tab"],
-    t["notes_tab"]
+    t["notes_tab"],
+    t["advanced_tab"]
 ])
 # Tab 1: Upload & OCR
 with tab1: 
@@ -1104,11 +1105,12 @@ with tab6:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # =================== NEW TAB: DOC COMPARE (Models) ===================
-tab_compare = st.tabs([
-    t["upload_tab"], t["preview_tab"], t["config_tab"], t["execute_tab"], t["dashboard_tab"], t["notes_tab"], "🔎 Doc Compare"
-])[-1]
-
-with tab_compare:
+# Tab 7: Advanced
+#tab_compare = st.tabs([
+#    t["upload_tab"], t["preview_tab"], t["config_tab"], t["execute_tab"], t["dashboard_tab"], t["notes_tab"], "🔎 Doc Compare"
+#])[-1]
+#with tab_compare:
+with tab7: 
     st.markdown('<div class="wow-card">', unsafe_allow_html=True)
     st.subheader(f"{theme_icon} {('Compare Agent/Models' if st.session_state.language == 'en' else '模型/代理人比對')}")
 
