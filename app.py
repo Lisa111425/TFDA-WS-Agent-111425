@@ -374,8 +374,8 @@ if "review_notes" not in st.session_state:
     st.session_state.review_notes = "# 審查筆記\n\n在這裡記錄您的審查筆記。支援 Markdown 格式。\n\n使用 HTML 標籤改變文字顏色，例如：<span style='color:red'>紅色文字</span>\n\n## 後續問題\n- 問題1？\n- 問題2？"
 # ==================== DEFAULT FDA AGENTS ====================
 DEFAULT_FDA_AGENTS = """agents: 
-  - name: 申請資料提取器 
-    description: 進行繁體中文摘要 
+  - name: 申請資料重點分析與摘要專家 
+    description: 申請資料重點分析與摘要專家
     system_prompt: | 
       你是一位醫療器材法規專家。根據提供的文件，進行繁體中文摘要in markdown in traditional chinese with keywords in coral color. Please also create a table include 20 key items。
       - 識別：廠商名稱、地址、品名、類別、證書編號、日期、機構 
@@ -385,7 +385,7 @@ DEFAULT_FDA_AGENTS = """agents:
     model: gpt-4o-mini 
     temperature: 0 
     top_p: 0.9 
-    max_tokens: 6000 
+    max_tokens: 3000 
   - name: 合約資料分析師 
     description: 合約資料分析師
     system_prompt: | 
@@ -397,80 +397,24 @@ DEFAULT_FDA_AGENTS = """agents:
       - 委託者及受託者之權利義務：委託者權利義務：舉例：有權查核製造紀錄及品質管理文件。應提供必要之技術文件(MDF/DMR)及產品規格。應依約定支付製造費用。乙方所有生產製程應符合醫療器材品質管理系統準則(QMS)及相關法令要求。 
     user_prompt: "請確認合約中包含以下內容，請摘要合約內容 in markdown in traditional chinese with keywords in coral color" 
     model: gpt-4o-mini 
-    temperature: 0.3 
+    temperature: 0 
     top_p: 0.9 
-    max_tokens: 1200 
-  - name: 醫療器材查驗登記形式審查分析師 
-    description: 醫療器材查驗登記形式審查 
+    max_tokens: 3200 
+  - name: 醫療器材委託製造合約審查專家
+    description: 醫療器材委託製造合約審查專家 
     system_prompt: | 
-      你是醫療器材審查專家，請確認申請資料包含以下內容：。 
-      - 類似品：是否檢附本部核准類似品之相關資料
-      - 申請書：加蓋醫療器材商及負責人印鑑、載明產品中文及英文名稱、型號、規格、須與製售證明及授權書相符、載明申請醫療器材商名稱、地址、須與醫療器材商許可執照相符、載明製造業者之名稱、地址
-    user_prompt: "請評估以下文件中的不良反應資訊：" 
+      醫療器材合約審查專家，請確認合約資料是否包含以下審查重點內容，並提供綜合審查建議。若目前提供的資料不足以判定是否符合規定，請告訴使用者應該進一步提供或確認那些資訊。 
+      - 委託製造合約所記載之委託者及受託者之名稱及地址，是否與申請書記載之委託者及受託者之名稱及地址一致： 委託者(甲方)名稱、地址，受託者(乙方)名稱、地址
+      - 託製造之合意：委託者義務、受託者義務。 
+      - 委託製造之醫療器材分類分級品項，是否與申請書記載之委託製造醫療器材分類分級品項一致。分類分級品項(舉例 M.5925 軟式隱形眼鏡) 
+      - 委託製造之製程，是否與申請書記載之委託製程一致(舉例：委託製程包含全部製程委託製造(特定分類分級品項)、製造(特定分類分級品項)、滅菌(特定滅菌方式) 
+      - 委託者及受託者之權利義務：委託者權利義務：舉例：有權查核製造紀錄及品質管理文件。應提供必要之技術文件(MDF/DMR)及產品規格。應依約定支付製造費用。乙方所有生產製程應符合醫療器材品質管理系統準則(QMS)及相關法令要求。 
+      - 委託製造合約是否包含委託者與受託者雙方公司用印，及雙方負責人簽名或用印
+    user_prompt: "請確認合約資料是否包含以下審查重點內容，並提供綜合審查建議。若目前提供的資料不足以判定是否符合規定，請告訴使用者應該進一步提供或確認那些資訊。" 
     model: gpt-4o-mini 
     temperature: 0.3 
     top_p: 0.9 
     max_tokens: 1500 
-  - name: 藥物交互作用分析器 
-    description: 識別藥物-藥物、藥物-食物交互作用 
-    system_prompt: | 
-      你是臨床藥學專家，專注於交互作用分析。 
-      - 識別：藥物-藥物、藥物-食物、藥物-疾病交互作用 
-      - 評估臨床意義與處置建議 
-      - 標註禁止併用與謹慎併用項目 
-    user_prompt: "請分析以下文件的藥物交互作用：" 
-    model: gpt-4o-mini 
-    temperature: 0.3 
-    top_p: 0.9 
-    max_tokens: 1200 
-  - name: 禁忌症與警語提取器 
-    description: 提取禁忌症、警語、注意事項 
-    system_prompt: | 
-      你是藥品安全管理專家。 
-      - 提取：絕對禁忌、相對禁忌、特殊警語 
-      - 區分不同嚴重程度 
-      - 標註特殊族群注意事項（孕婦、哺乳、兒童、老年） 
-    user_prompt: "請提取以下文件的禁忌症與警語：" 
-    model: gpt-4o-mini 
-    temperature: 0.2 
-    top_p: 0.9 
-    max_tokens: 1000 
-  - name: 藥動學參數提取器 
-    description: 提取吸收、分布、代謝、排泄（ADME）資訊 
-    system_prompt: | 
-      你是臨床藥理學專家。 
-      - 提取：生體可用率、半衰期、清除率、分布體積 
-      - 識別代謝酵素（CYP450等）、排泄途徑 
-      - 以表格呈現藥動學參數 
-    user_prompt: "請提取以下文件的藥動學參數：" 
-    model: gpt-4o-mini 
-    temperature: 0.2 
-    top_p: 0.9 
-    max_tokens: 1000 
-  - name: 臨床試驗資料分析器 
-    description: 分析臨床試驗設計、結果、統計顯著性 
-    system_prompt: | 
-      你是臨床試驗專家。 
-      - 提取：試驗設計（Phase I/II/III/IV）、受試者數、主要終點 
-      - 分析：療效指標、安全性數據、統計顯著性 
-      - 標註研究限制與偏差風險 
-    user_prompt: "請分析以下臨床試驗資料：" 
-    model: gpt-4o-mini 
-    temperature: 0.3 
-    top_p: 0.9 
-    max_tokens: 1500 
-  - name: 藥品許可證資訊提取器 
-    description: 提取許可證字號、核准日期、廠商資訊 
-    system_prompt: | 
-      你是藥政法規專家。 
-      - 提取：許可證字號、核准日期、有效期限 
-      - 識別：製造商、進口商、國內代理商資訊 
-      - 標註許可變更歷史 
-    user_prompt: "請提取以下文件的許可證資訊：" 
-    model: gpt-4o-mini 
-    temperature: 0.2 
-    top_p: 0.9 
-    max_tokens: 800 
   - name: 仿單變更比對器 
     description: 比對仿單版本差異，識別重要變更 
     system_prompt: | 
@@ -483,202 +427,10 @@ DEFAULT_FDA_AGENTS = """agents:
     temperature: 0.2 
     top_p: 0.9 
     max_tokens: 1200 
-  - name: 特殊族群用藥分析器 
-    description: 分析孕婦、哺乳、兒童、老年用藥安全性 
-    system_prompt: | 
-      你是特殊族群用藥專家。 
-      - 評估：孕婦安全等級、哺乳期安全性 
-      - 分析：兒童用藥、老年人劑量調整 
-      - 標註肝腎功能不全用藥建議 
-    user_prompt: "請分析以下特殊族群用藥資訊：" 
-    model: gpt-4o-mini 
-    temperature: 0.3 
-    top_p: 0.9 
-    max_tokens: 1200 
-  - name: 藥品儲存與安定性分析器 
-    description: 提取儲存條件、有效期限、安定性資料 
-    system_prompt: | 
-      你是藥品品質管理專家。 
-      - 提取：儲存溫度、濕度、光線要求 
-      - 識別：有效期限、開封後效期 
-      - 標註特殊儲存注意事項 
-    user_prompt: "請分析以下儲存與安定性資訊：" 
-    model: gpt-4o-mini 
-    temperature: 0.2 
-    top_p: 0.9 
-    max_tokens: 800 
-  - name: 過量與中毒處置分析器 
-    description: 分析藥品過量症狀與處置方式 
-    system_prompt: | 
-      你是臨床毒理學專家。 
-      - 識別：過量症狀、中毒機轉、致死劑量 
-      - 提取：解毒劑、緊急處置、支持療法 
-      - 標註需監測的生理指標 
-    user_prompt: "請分析以下過量與中毒處置資訊：" 
-    model: gpt-4o-mini 
-    temperature: 0.3 
-    top_p: 0.9 
-    max_tokens: 1000 
-  - name: 藥品外觀辨識器 
-    description: 提取藥品外觀特徵、辨識碼 
-    system_prompt: | 
-      你是藥品鑑別專家。 
-      - 描述：形狀、顏色、大小、刻痕 
-      - 提取：藥品辨識碼、包裝特徵 
-      - 協助防偽辨識 
-    user_prompt: "請提取以下藥品外觀資訊：" 
-    model: gpt-4o-mini 
-    temperature: 0.2 
-    top_p: 0.9 
-    max_tokens: 800 
-  - name: 賦形劑分析器 
-    description: 識別賦形劑成分與過敏原 
-    system_prompt: | 
-      你是藥劑學專家。 
-      - 列出所有賦形劑成分 
-      - 標註常見過敏原（乳糖、麩質等） 
-      - 識別著色劑、防腐劑 
-    user_prompt: "請分析以下賦形劑資訊：" 
-    model: gpt-4o-mini 
-    temperature: 0.2 
-    top_p: 0.9 
-    max_tokens: 800 
-  - name: 用藥指導建議生成器 
-    description: 生成病人用藥指導衛教資料 
-    system_prompt: | 
-      你是藥師衛教專家。 
-      - 以淺顯易懂語言說明用法 
-      - 提供服藥時間、飲食注意 
-      - 標註應就醫的警訊症狀 
-    user_prompt: "請生成以下藥品的病人用藥指導：" 
-    model: gpt-4o-mini 
-    temperature: 0.4 
-    top_p: 0.9 
-    max_tokens: 1000 
-  - name: 法規符合性檢查器 
-    description: 檢查文件是否符合FDA法規要求 
-    system_prompt: | 
-      你是藥政法規稽核專家。 
-      - 檢查必要項目完整性 
-      - 識別缺漏或不符合規定處 
-      - 提供改善建議 
-    user_prompt: "請檢查以下文件的法規符合性：" 
-    model: gpt-4o-mini 
-    temperature: 0.3 
-    top_p: 0.9 
-    max_tokens: 1200 
-  - name: 風險效益評估器 
-    description: 綜合評估藥品風險與效益 
-    system_prompt: | 
-      你是藥品風險管理專家。 
-      - 量化：療效證據強度、不良反應風險 
-      - 評估：風險效益比、適用族群 
-      - 提供決策建議 
-    user_prompt: "請評估以下藥品的風險效益：" 
-    model: gpt-4o-mini 
-    temperature: 0.4 
-    top_p: 0.9 
-    max_tokens: 1500 
-  - name: 學名藥生體相等性分析器 
-    description: 分析學名藥與原廠藥生體相等性 
-    system_prompt: | 
-      你是生體相等性評估專家。 
-      - 提取：BE試驗設計、AUC、Cmax數據 
-      - 評估：90%信賴區間、符合性 
-      - 標註溶離曲線比對結果 
-    user_prompt: "請分析以下生體相等性資料：" 
-    model: gpt-4o-mini 
-    temperature: 0.2 
-    top_p: 0.9 
-    max_tokens: 1000 
-  - name: 藥品經濟學分析器 
-    description: 分析藥品成本效益與健保給付 
-    system_prompt: | 
-      你是藥品經濟學專家。 
-      - 評估：成本效益比、QALY、ICER 
-      - 分析：健保給付條件、支付價格 
-      - 比較同類藥品經濟性 
-    user_prompt: "請分析以下藥品經濟學資料：" 
-    model: gpt-4o-mini 
-    temperature: 0.3 
-    top_p: 0.9 
-    max_tokens: 1200 
-  - name: 藥品回收與下架分析器 
-    description: 分析藥品回收原因與影響範圍 
-    system_prompt: | 
-      你是藥品安全監控專家。 
-      - 識別：回收等級、原因、批號 
-      - 評估：影響範圍、替代方案 
-      - 提供處置建議 
-    user_prompt: "請分析以下藥品回收資訊：" 
-    model: gpt-4o-mini 
-    temperature: 0.3 
-    top_p: 0.9 
-    max_tokens: 1000 
-  - name: 上市後監測資料分析器 
-    description: 分析真實世界數據與上市後安全性 
-    system_prompt: | 
-      你是藥物流行病學專家。 
-      - 分析：不良事件通報、信號偵測 
-      - 評估：長期安全性、罕見風險 
-      - 識別需進一步研究的議題 
-    user_prompt: "請分析以下上市後監測資料：" 
-    model: gpt-4o-mini 
-    temperature: 0.3 
-    top_p: 0.9 
-    max_tokens: 1200 
-  - name: 藥品品質檢驗標準提取器 
-    description: 提取品質規格與檢驗方法 
-    system_prompt: | 
-      你是藥品品管專家。 
-      - 提取：含量規格、純度標準 
-      - 識別：檢驗方法、接受標準 
-      - 標註關鍵品質屬性 
-    user_prompt: "請提取以下品質檢驗標準：" 
-    model: gpt-4o-mini 
-    temperature: 0.2 
-    top_p: 0.9 
-    max_tokens: 1000 
-  - name: 製程與製造資訊分析器 
-    description: 分析製造流程與GMP符合性 
-    system_prompt: | 
-      你是藥品製造專家。 
-      - 描述：製程步驟、關鍵參數 
-      - 評估：GMP符合性、品質控制 
-      - 識別關鍵製程步驟 
-    user_prompt: "請分析以下製程資訊：" 
-    model: gpt-4o-mini 
-    temperature: 0.3 
-    top_p: 0.9 
-    max_tokens: 1000 
-  - name: 藥品分類與管制級別分析器 
-    description: 判定藥品分類與管制等級 
-    system_prompt: | 
-      你是藥事法規分類專家。 
-      - 判定：處方/指示/成藥分類 
-      - 識別：管制藥品級別（1-4級） 
-      - 說明管制原因與規定 
-    user_prompt: "請分析以下藥品分類資訊：" 
-    model: gpt-4o-mini 
-    temperature: 0.2 
-    top_p: 0.9 
-    max_tokens: 800 
-  - name: 國際藥典比對器 
-    description: 比對各國藥典標準差異 
-    system_prompt: | 
-      你是國際藥典專家。 
-      - 比對：USP、BP、EP、JP標準差異 
-      - 識別：各國特殊要求 
-      - 提供符合性建議 
-    user_prompt: "請比對以下國際藥典標準：" 
-    model: gpt-4o-mini 
-    temperature: 0.3 
-    top_p: 0.9 
-    max_tokens: 1200 
-  - name: 藥品標籤與說明書檢查器 
+  - name: 標籤與說明書檢查器 
     description: 檢查標籤說明書格式與完整性 
     system_prompt: | 
-      你是藥品標示審查專家。 
+      你是標示審查專家。 
       - 檢查：必要資訊完整性、格式規範 
       - 識別：字體大小、警語標示 
       - 提供修改建議 
@@ -687,46 +439,10 @@ DEFAULT_FDA_AGENTS = """agents:
     temperature: 0.2 
     top_p: 0.9 
     max_tokens: 1000 
-  - name: 藥品專利分析器 
-    description: 分析藥品專利狀態與到期時間 
-    system_prompt: | 
-      你是藥品專利分析專家。 
-      - 識別：成分專利、製程專利、用途專利 
-      - 分析：專利到期時間、延長狀況 
-      - 評估學名藥上市時機 
-    user_prompt: "請分析以下藥品專利資訊：" 
-    model: gpt-4o-mini 
-    temperature: 0.3 
-    top_p: 0.9 
-    max_tokens: 1000 
-  - name: 藥品命名規範檢查器 
-    description: 檢查藥品命名是否符合規範 
-    system_prompt: | 
-      你是藥品命名審查專家。 
-      - 檢查：與既有藥品相似度 
-      - 評估：混淆風險、誤用可能 
-      - 提供命名建議 
-    user_prompt: "請檢查以下藥品命名：" 
-    model: gpt-4o-mini 
-    temperature: 0.3 
-    top_p: 0.9 
-    max_tokens: 800 
-  - name: 臨床指引比對器 
-    description: 比對藥品使用與臨床指引符合性 
-    system_prompt: | 
-      你是實證醫學專家。 
-      - 比對：適應症與指引建議 
-      - 評估：證據等級、建議強度 
-      - 識別超適應症使用 
-    user_prompt: "請比對以下臨床指引：" 
-    model: gpt-4o-mini 
-    temperature: 0.3 
-    top_p: 0.9 
-    max_tokens: 1200 
   - name: 綜合報告生成器 
     description: 整合所有分析結果生成完整報告 
     system_prompt: | 
-      你是FDA文件整合專家。 
+      你是文件整合專家。 
       - 彙整：前述所有代理的分析結果 
       - 生成：結構化完整報告 
       - 標註：重點發現、風險警示、建議事項 
@@ -1385,6 +1101,119 @@ with tab6:
             st.session_state.review_notes += f"\n\n## 後續問題建議（自動生成）\n{output}"
         st.success("✅ 已新增後續問題至筆記末尾！")
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# =================== NEW TAB: DOC COMPARE (Models) ===================
+tab_compare = st.tabs([
+    t["upload_tab"], t["preview_tab"], t["config_tab"], t["execute_tab"], t["dashboard_tab"], t["notes_tab"], "🔎 Doc Compare"
+])[-1]
+
+with tab_compare:
+    st.markdown('<div class="wow-card">', unsafe_allow_html=True)
+    st.subheader(f"{theme_icon} {('Compare Agent/Models' if st.session_state.language == 'en' else '模型/代理人比對')}")
+
+    # 1. Paste or upload doc (text, markdown, json)
+    doc_source = st.radio("資料來源", ["貼上文字", "上傳檔案"], horizontal=True)
+    doc_text = ""
+    uploaded_doc = None
+
+    if doc_source == "貼上文字":
+        doc_text = st.text_area("文件內容", height=400, key="cmp_doc_text")
+    else:
+        uploaded_doc = st.file_uploader("上傳Text/Markdown/JSON", type=["txt", "md", "json"], key="cmp_doc_upload")
+        if uploaded_doc:
+            content = uploaded_doc.read().decode("utf-8")
+            doc_text = st.text_area("文件內容", value=content, height=400, key="cmp_doc_text_fromupload")
+
+    st.markdown("---")
+
+    # 2. User selects: agent + 2 models + editable prompt for each
+    st.markdown("#### 選擇代理人與模型")
+
+    # Agent selector
+    agent_names = [a.get("name", f"Agent {i+1}") for i, a in enumerate(st.session_state.agents_config)]
+    agent_idx = st.selectbox("代理人", agent_names, index=0)
+    agent = st.session_state.agents_config[agent_names.index(agent_idx)]
+
+    # Model selectors (can pick the same or different)
+    models_available = ["gpt-4o-mini", "gpt-5-nano", "gpt-4.1-mini",
+                        "gemini-2.5-flash", "gemini-2.5-flash-lite",
+                        "grok-4-fast-reasoning", "grok-3-mini"]
+    colm1, colm2 = st.columns(2)
+    with colm1:
+        model1 = st.selectbox("模型 1", models_available, key="cmp_model1")
+    with colm2:
+        model2 = st.selectbox("模型 2", models_available, index=1, key="cmp_model2")
+
+    # Prompt editors
+    colp1, colp2 = st.columns(2)
+    with colp1:
+        prompt1 = st.text_area("模型 1的 Prompt", value=agent.get("user_prompt", ""), height=100, key="cmp_prompt1")
+    with colp2:
+        prompt2 = st.text_area("模型 2的 Prompt", value=agent.get("user_prompt", ""), height=100, key="cmp_prompt2")
+
+    # Optional: system prompt controls
+    sys_prompt = agent.get("system_prompt", "")
+    st.markdown("**[可選] System Prompt：**")
+    sys_prompt = st.text_area("System Prompt", value=sys_prompt, height=80, key="cmp_sys_prompt")
+
+    # ======== EXECUTE AND COMPARE ========
+    run_btn = st.button("🚀 比較模型", type="primary", use_container_width=True)
+    result1, result2 = "", ""
+    time1 = time2 = 0.0
+
+    if run_btn and doc_text.strip():
+        params = {"temperature": agent.get("temperature", 0.3), "top_p": agent.get("top_p", 0.95), "max_tokens": agent.get("max_tokens", 1000)}
+        with st.spinner("執行模型..."):
+            # Compose message for both models
+            messages1 = [{"role": "system", "content": sys_prompt}, {"role": "user", "content": f"{prompt1}\n\n{doc_text}"}]
+            messages2 = [{"role": "system", "content": sys_prompt}, {"role": "user", "content": f"{prompt2}\n\n{doc_text}"}]
+            # Run Model 1
+            t0 = time.time()
+            try:
+                out1, usage1, prov1 = router.generate_text(model1, messages1, params)
+                time1 = time.time() - t0
+            except Exception as e:
+                out1, time1, prov1 = f"[❌ Error: {str(e)}]", 0.0, ""
+                usage1 = {}
+            # Run Model 2
+            t0 = time.time()
+            try:
+                out2, usage2, prov2 = router.generate_text(model2, messages2, params)
+                time2 = time.time() - t0
+            except Exception as e:
+                out2, time2, prov2 = f"[❌ Error: {str(e)}]", 0.0, ""
+                usage2 = {}
+
+        result1, result2 = out1, out2
+
+        # Show comparison SIDE BY SIDE:
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown(f"### 🥇 {model1} ({prov1})")
+            st.markdown(f"*耗時*: {time1:.2f}s, *Tokens*: {usage1.get('total_tokens', '-')}")
+            st.text_area("Output 1", value=result1, height=400, key="cmp_out1")
+        with c2:
+            st.markdown(f"### 🥈 {model2} ({prov2})")
+            st.markdown(f"*耗時*: {time2:.2f}s, *Tokens*: {usage2.get('total_tokens', '-')}")
+            st.text_area("Output 2", value=result2, height=400, key="cmp_out2")
+
+        # Diff or feedback region
+        with st.expander("🔍 差異/心得比較"):
+            try:
+                import difflib
+                html_diff = difflib.HtmlDiff().make_table(result1.splitlines(), result2.splitlines(), model1, model2)
+                st.markdown(html_diff, unsafe_allow_html=True)
+            except Exception as e:
+                st.info("Diff unavailable. Install python stdlib difflib for side-by-side diff.")
+
+    st.markdown("""
+    <ul>
+     <li>你可以更改 <b>文件內容</b> 再次比對</li>
+     <li>可隨時切換代理人或模型組合，修改 Prompt 後重新比較</li>
+     <li>展開差異查看差異行/逐行對比，或將其中一側結果複製到主 pipeline</li>
+    </ul>
+    """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 # ==================== FOOTER ====================
 st.markdown("---")
