@@ -736,7 +736,7 @@ with tab1:
         llm_ocr_model = st.selectbox("LLM Model", [ 
             "gpt-4.1-mini", 
             "gpt-4o-mini", 
-            "gpt-4o-mini" 
+            "gpt-4o" 
         ]) 
     if uploaded: 
         pdf_bytes = uploaded.read() 
