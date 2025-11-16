@@ -236,7 +236,7 @@ TRANSLATIONS = {
 } 
 # ==================== LLM ROUTER ====================
 ModelChoice = { 
-    "gpt-5-nano": "openai", 
+    "gpt-4o": "openai", 
     "gpt-4o-mini": "openai", 
     "gpt-4.1-mini": "openai", 
     "gemini-2.5-flash": "gemini", 
