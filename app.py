@@ -734,8 +734,8 @@ with tab1:
         page_range_input = st.text_input(t["page_range"], value="1-5") 
     if ocr_mode.startswith("LLM"): 
         llm_ocr_model = st.selectbox("LLM Model", [ 
-            "gemini-2.5-flash", 
-            "gemini-2.5-flash-lite", 
+            "gpt-4.1-mini", 
+            "gpt-4o-mini", 
             "gpt-4o-mini" 
         ]) 
     if uploaded: 
@@ -825,7 +825,7 @@ with tab3:
             with col2: 
                 agent["model"] = st.selectbox( 
                     "Model", 
-                    ["gpt-4o-mini", "gpt-5-nano", "gemini-2.5-flash", "gemini-2.5-flash-lite", "grok-3-mini"], 
+                    ["gpt-4o-mini", "gpt-4.1-mini", "gemini-2.5-flash", "gemini-2.5-flash-lite", "grok-3-mini"], 
                     index=0, 
                     key=f"model_{i}" 
                 ) 
